@@ -40,13 +40,14 @@ function showPreview(id) {
 
 
 // ---- ROUTING ----
-function showSection(name) {
+function showSection(name, updateHash = true) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const sec = document.getElementById('section-' + name);
   const nav = document.querySelector('[data-section="' + name + '"]');
   if (sec) sec.classList.add('active');
   if (nav) nav.classList.add('active');
+  if (updateHash) history.replaceState(null, '', '#' + name);
   renderSection(name);
 }
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -498,6 +499,9 @@ function renderSystem() {
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
+  const hash = window.location.hash.slice(1);
+  const valid = ['overview', 'automations', 'contacts', 'system'];
+  if (valid.includes(hash)) showSection(hash, false);
   fetchSnapshot();
   setInterval(fetchSnapshot, 5 * 60 * 1000);
 });
