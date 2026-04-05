@@ -3,6 +3,36 @@ let history = {};
 let rpiNames = {};
 let editingRpiId = null;
 
+// ---- SCRIPT PREVIEW MODAL ----
+function showModal(title, content) {
+  let modal = document.getElementById('preview-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'preview-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-header">
+          <span class="modal-title" id="modal-title"></span>
+          <button class="modal-close" onclick="closeModal()">&#10005;</button>
+        </div>
+        <pre class="modal-body" id="modal-body"></pre>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.body.appendChild(modal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = content;
+  modal.style.display = 'flex';
+}
+function closeModal() {
+  const m = document.getElementById('preview-modal');
+  if (m) m.style.display = 'none';
+}
+
+
+
 // ---- ROUTING ----
 function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -269,7 +299,8 @@ function renderTasks() {
         <td><span class="tag-who">${t.forWho || '--'}</span></td>
         <td title="${t.schedule || ''}">${humanCron(t.schedule)}</td>
         <td>${badge(t.status || 'active')}</td>
-        <td><span class="mono" style="font-size:10px;color:var(--muted)">${(t.id || '').slice(0, 24)}</span></td>
+        <td><span class="mono" style="font-size:10px;color:var(--muted)">${(t.id || '').slice(0, 22)}</span></td>
+        <td>${t.prompt ? `<button class="view-btn" onclick="showModal('" + name + "', '" + (t.prompt||'').replace(/'/g, '\\&#39;') + "')">View</button>` : ''}</td>
       </tr>`;
     }).join('') :
     '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucune tache</td></tr>';
@@ -347,7 +378,10 @@ function renderRpi() {
         <td style="color:var(--muted);font-size:12px">${s.desc || '--'}</td>
         <td>${badge(s.status === 'active' ? 'active' : 'paused')}</td>
         <td>${statusDot(lastStatus)}<span class="mono" style="font-size:11px">${lastRun ? fmtDate(lastRun) : '--'}</span>${lastDur ? ' <span style="color:var(--muted);font-size:10px">' + fmtDuration(lastDur) + '</span>' : ''}</td>
-        <td><button class="run-btn" data-run="${s.name}" onclick="runNow('${s.name}')">Run</button></td>
+        <td style="white-space:nowrap">
+          <button class="run-btn" data-run="${s.name}" onclick="runNow('${s.name}')">Run</button>
+          ${snapshot.rpi?.scriptSources?.[s.name] ? `<button class="view-btn" onclick="showModal('${s.name}', snapshot.rpi.scriptSources['${s.name}'])">View</button>` : ''}
+        </td>
       </tr>`;
     }).join('') :
     '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucun script RPi</td></tr>';
