@@ -151,3 +151,9 @@ a{color:inherit;text-decoration:none}
 /* ---- TASKS TABLE - name col wider ---- */
 #tasks-table th:nth-child(1) { width: 220px; }
 #tasks-table th:nth-child(2) { width: 120px; }
+
+/* ---- TAG WHO ---- */
+.tag-who { display: inline-block; background: rgba(88,166,255,.12); color: var(--blue); border-radius: 5px; font-size: 11px; font-weight: 600; padding: 2px 7px; }
+
+/* ---- PERSON PERMISSIONS ---- */
+.person-perms { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; border-top: 1px solid var(--border); padding-top: 8px; }

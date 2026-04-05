@@ -293,8 +293,10 @@ function renderRpi() {
       const lastDur = s.lastDuration || h[0]?.lastDuration || null;
       return `<tr>
         <td><strong>${s.name}</strong></td>
+        <td><span class="tag-who">${s.forWho || '--'}</span></td>
         <td><span class="mono" style="font-size:11px">${humanCron(s.cron)}</span></td>
         <td style="color:var(--muted);font-size:12px">${s.desc || '--'}</td>
+        <td>${badge(s.status === 'active' ? 'active' : 'paused')}</td>
         <td>${statusDot(lastStatus)}<span class="mono" style="font-size:11px">${lastRun ? fmtDate(lastRun) : '--'}</span>${lastDur ? ' <span style="color:var(--muted);font-size:10px">' + fmtDuration(lastDur) + '</span>' : ''}</td>
         <td><button class="run-btn" data-run="${s.name}" onclick="runNow('${s.name}')">Run</button></td>
       </tr>`;
@@ -339,8 +341,9 @@ function renderPeople() {
           ${channelBadge(p.jid)}
           ${isPersonalChat(p.jid) ? '<span class="badge paused">DM</span>' : ''}
           ${(p.rights || []).map(r => `<span class="badge paused">${r}</span>`).join('')}
-          ${p.email ? '<span class="badge paused" style="font-size:9px">' + p.email + '</span>' : ''}
         </div>
+        ${p.permissions ? `<div class="person-perms">${p.permissions}</div>` : ''}
+        ${p.email ? `<div style="font-size:10px;color:var(--muted);margin-top:4px">${p.email}</div>` : ''}
       </div>
     `).join('') :
     '<div class="empty">Aucune donnee</div>';
