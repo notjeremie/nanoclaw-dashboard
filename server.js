@@ -19,7 +19,14 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
+const FileStore = require('session-file-store')(session);
 app.use(session({
+  store: new FileStore({
+    path: path.join(__dirname, 'data/sessions'),
+    ttl: 7 * 24 * 60 * 60,
+    retries: 0,
+    logFn: () => {},
+  }),
   secret: process.env.SESSION_SECRET || 'nanoclaw-secret',
   resave: false,
   saveUninitialized: false,
