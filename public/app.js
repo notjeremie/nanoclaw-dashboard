@@ -1,5 +1,7 @@
 let snapshot = {};
 let history = {};
+let rpiNames = {};
+let editingRpiId = null;
 
 // ---- ROUTING ----
 function showSection(name) {
@@ -264,7 +266,7 @@ function renderTasks() {
           ${isEditing ? '' : `<span class="task-name-display" title="Cliquer pour renommer">${name}</span>
           <button class="edit-name-btn" onclick="startEdit('${t.id}', '${name.replace(/'/g, "\\'")}')" title="Renommer">✎</button>`}
         </td>
-        <td><span class="mono" style="font-size:11px;color:var(--muted)">${t.group || '--'}</span></td>
+        <td><span class="tag-who">${t.forWho || '--'}</span></td>
         <td title="${t.schedule || ''}">${humanCron(t.schedule)}</td>
         <td>${badge(t.status || 'active')}</td>
         <td><span class="mono" style="font-size:10px;color:var(--muted)">${(t.id || '').slice(0, 24)}</span></td>
@@ -282,6 +284,43 @@ function renderTasks() {
 document.getElementById('tasks-search')?.addEventListener('input', renderTasks);
 document.getElementById('tasks-filter')?.addEventListener('change', renderTasks);
 
+
+// ---- RPi NAME EDIT ----
+function startEditRpi(id, currentName) {
+  editingRpiId = id;
+  renderRpi();
+  const cell = document.getElementById('rpi-name-' + id);
+  if (!cell) return;
+  const inp = document.createElement('input');
+  inp.className = 'name-input';
+  inp.value = currentName;
+  inp.onkeydown = e => {
+    if (e.key === 'Enter') saveRpiName(id, inp.value);
+    if (e.key === 'Escape') { editingRpiId = null; renderRpi(); }
+  };
+  inp.onblur = () => saveRpiName(id, inp.value);
+  cell.innerHTML = '';
+  cell.appendChild(inp);
+  inp.focus();
+  inp.select();
+}
+
+async function saveRpiName(id, newName) {
+  newName = (newName || '').trim();
+  if (!newName) { editingRpiId = null; renderRpi(); return; }
+  editingRpiId = null;
+  try {
+    const res = await fetch('/api/rpi-name/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName }),
+    });
+    const data = await res.json();
+    if (data.ok) rpiNames[id] = newName;
+  } catch (e) { console.error('saveRpiName error', e); }
+  renderRpi();
+}
+
 // ---- RPi ----
 function renderRpi() {
   const scripts = snapshot.rpi?.scripts || [];
@@ -291,8 +330,18 @@ function renderRpi() {
       const lastRun = s.lastRun || h[0]?.lastRun || null;
       const lastStatus = s.lastStatus || h[0]?.lastStatus || null;
       const lastDur = s.lastDuration || h[0]?.lastDuration || null;
+      const rpiDisplayName = rpiNames[s.name] || null;
+      const isEditingRpi = editingRpiId === s.name;
       return `<tr>
-        <td><strong>${s.name}</strong></td>
+        <td>
+          <div id="rpi-name-${s.name}" class="task-name-cell" style="margin-bottom:3px">
+            ${isEditingRpi ? '' : `
+              <span class="task-name-display">${rpiDisplayName || s.name}</span>
+              <button class="edit-name-btn" onclick="startEditRpi('${s.name}', '${(rpiDisplayName || s.name).replace(/'/g, "\'")}')">&#9998;</button>
+            `}
+          </div>
+          <span class="mono" style="font-size:11px;color:var(--muted)">${s.name}</span>
+        </td>
         <td><span class="tag-who">${s.forWho || '--'}</span></td>
         <td><span class="mono" style="font-size:11px">${humanCron(s.cron)}</span></td>
         <td style="color:var(--muted);font-size:12px">${s.desc || '--'}</td>
