@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Antoine Sonof — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">⬡</span>
+      <span>Antoine Sonof</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-section="overview">
+        <i data-lucide="layout-dashboard"></i><span>Overview</span>
+      </a>
+      <a href="#" class="nav-item" data-section="automations">
+        <i data-lucide="clock"></i><span>Automatisations</span>
+      </a>
+      <a href="#" class="nav-item" data-section="contacts">
+        <i data-lucide="users"></i><span>Contacts</span>
+      </a>
+      <a href="#" class="nav-item" data-section="system">
+        <i data-lucide="server"></i><span>Systeme</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <span class="update-time" id="lastUpdate">—</span>
+      <a href="/logout" class="logout-btn"><i data-lucide="log-out"></i></a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <section id="section-overview" class="section active">
+      <h1 class="page-title">Overview</h1>
+      <div class="cards-grid" id="overview-cards">
+        <div class="stat-card">
+          <div class="stat-icon green"><i data-lucide="zap"></i></div>
+          <div class="stat-body"><div class="stat-val" id="stat-active-tasks">—</div><div class="stat-label">Taches actives</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue"><i data-lucide="pause-circle"></i></div>
+          <div class="stat-body"><div class="stat-val" id="stat-paused-tasks">—</div><div class="stat-label">En pause</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple"><i data-lucide="cpu"></i></div>
+          <div class="stat-body"><div class="stat-val" id="stat-rpi-scripts">—</div><div class="stat-label">Scripts RPi</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon orange"><i data-lucide="users"></i></div>
+          <div class="stat-body"><div class="stat-val" id="stat-people">—</div><div class="stat-label">Personnes</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon teal"><i data-lucide="message-square"></i></div>
+          <div class="stat-body"><div class="stat-val" id="stat-groups">—</div><div class="stat-label">Groupes</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" id="stat-vps-icon"><i data-lucide="server"></i></div>
+          <div class="stat-body"><div class="stat-val" id="stat-vps-disk">—</div><div class="stat-label">VPS Disk</div></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><i data-lucide="activity"></i> Prochaines executions</div>
+          <div class="card-body" id="next-runs-list"><div class="empty">Chargement...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><i data-lucide="alert-circle"></i> Statut systeme</div>
+          <div class="card-body" id="system-status-mini"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUTOMATISATIONS -->
+    <section id="section-automations" class="section">
+      <h1 class="page-title">Automatisations</h1>
+      <div class="tabs">
+        <button class="tab active" data-tab="nanoclaw-tab">NanoClaw</button>
+        <button class="tab" data-tab="rpi-tab">Raspberry Pi</button>
+      </div>
+
+      <div id="nanoclaw-tab" class="tab-content active">
+        <div class="toolbar">
+          <input class="search-input" id="tasks-search" placeholder="Rechercher une tache..." type="text">
+          <select class="filter-select" id="tasks-filter">
+            <option value="">Tous statuts</option>
+            <option value="active">Actif</option>
+            <option value="paused">Pause</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tasks-table">
+            <thead><tr><th>Groupe</th><th>Schedule</th><th>Statut</th><th>Prochaine exec</th><th>ID</th></tr></thead>
+            <tbody id="tasks-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="rpi-tab" class="tab-content">
+        <div class="table-wrap">
+          <table class="data-table" id="rpi-table">
+            <thead><tr><th>Script</th><th>Cron</th><th>Description</th><th>Statut</th></tr></thead>
+            <tbody id="rpi-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACTS -->
+    <section id="section-contacts" class="section">
+      <h1 class="page-title">Contacts</h1>
+      <div class="tabs">
+        <button class="tab active" data-tab="people-tab">Personnes</button>
+        <button class="tab" data-tab="groups-tab">Groupes</button>
+      </div>
+
+      <div id="people-tab" class="tab-content active">
+        <div class="people-grid" id="people-grid"></div>
+      </div>
+
+      <div id="groups-tab" class="tab-content">
+        <div class="table-wrap">
+          <table class="data-table" id="groups-table">
+            <thead><tr><th>Nom</th><th>Channel</th><th>Trigger</th><th>Derniere activite</th><th>Statut</th></tr></thead>
+            <tbody id="groups-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SYSTEME -->
+    <section id="section-system" class="section">
+      <h1 class="page-title">Systeme</h1>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><i data-lucide="server"></i> VPS (185.253.75.24)</div>
+          <div class="card-body" id="vps-detail"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><i data-lucide="cpu"></i> Raspberry Pi (100.120.30.18)</div>
+          <div class="card-body" id="rpi-detail"></div>
+        </div>
+      </div>
+      <div class="card mt16">
+        <div class="card-header"><i data-lucide="activity"></i> NanoClaw</div>
+        <div class="card-body" id="nanoclaw-detail"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
