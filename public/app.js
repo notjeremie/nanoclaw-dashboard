@@ -1,6 +1,7 @@
 let snapshot = {};
 let history = {};
 let rpiNames = {};
+let taskNames = {};
 let editingRpiId = null;
 
 // ---- SCRIPT PREVIEW MODAL ----
