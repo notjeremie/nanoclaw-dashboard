@@ -31,6 +31,11 @@ function closeModal() {
   if (m) m.style.display = 'none';
 }
 
+const previewData = {};
+function showPreview(id) {
+  if (previewData[id] !== undefined) showModal(id, previewData[id]);
+}
+
 
 
 // ---- ROUTING ----
@@ -300,7 +305,7 @@ function renderTasks() {
         <td title="${t.schedule || ''}">${humanCron(t.schedule)}</td>
         <td>${badge(t.status || 'active')}</td>
         <td><span class="mono" style="font-size:10px;color:var(--muted)">${(t.id || '').slice(0, 22)}</span></td>
-        <td>${t.prompt ? `<button class="view-btn" onclick="showModal('" + name + "', '" + (t.prompt||'').replace(/'/g, '\\&#39;') + "')">View</button>` : ''}</td>
+        <td>${t.prompt ? (() => { previewData[t.id] = t.prompt; return `<button class="view-btn" onclick="showPreview('${t.id}')">View</button>`; })() : ''}</td>
       </tr>`;
     }).join('') :
     '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucune tache</td></tr>';
@@ -380,7 +385,7 @@ function renderRpi() {
         <td>${statusDot(lastStatus)}<span class="mono" style="font-size:11px">${lastRun ? fmtDate(lastRun) : '--'}</span>${lastDur ? ' <span style="color:var(--muted);font-size:10px">' + fmtDuration(lastDur) + '</span>' : ''}</td>
         <td style="white-space:nowrap">
           <button class="run-btn" data-run="${s.name}" onclick="runNow('${s.name}')">Run</button>
-          ${snapshot.rpi?.scriptSources?.[s.name] ? `<button class="view-btn" onclick="showModal('${s.name}', snapshot.rpi.scriptSources['${s.name}'])">View</button>` : ''}
+          ${snapshot.rpi?.scriptSources?.[s.name] ? (() => { previewData[s.name] = snapshot.rpi.scriptSources[s.name]; return `<button class="view-btn" onclick="showPreview('${s.name}')">View</button>`; })() : ''}
         </td>
       </tr>`;
     }).join('') :
