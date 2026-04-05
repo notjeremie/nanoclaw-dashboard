@@ -147,6 +147,27 @@ function humanCron(expr) {
   return map[expr] || expr;
 }
 
+
+// ---- TASK LABEL ----
+function taskLabel(t) {
+  if (t.desc) return t.desc;   // RPi scripts
+  if (t.name) return t.name;   // RPi scripts fallback
+  // Extract script name from bash command in prompt
+  const m = (t.prompt || '').match(/node [^\s]*\/([a-z][a-z0-9-]*)(?:\.m?js)?/i);
+  if (m) return m[1];
+  // Fall back to group folder name
+  if (t.group) return t.group.replace(/^(telegram|whatsapp|discord)_/, '').replace(/-/g, ' ');
+  return t.id ? t.id.slice(0, 20) + '...' : '--';
+}
+
+// ---- PRIVATE CHAT DETECTION ----
+function isPrivateChat(g) {
+  const jid = g.jid || '';
+  if (jid.includes('@s.whatsapp.net')) return true;
+  if (jid.startsWith('tg:') && !jid.startsWith('tg:-')) return true;
+  return false;
+}
+
 // ---- RUN NOW ----
 async function runNow(scriptId) {
   const btn = document.querySelector(`[data-run="${scriptId}"]`);
@@ -189,7 +210,7 @@ function renderOverview() {
     const recent = allTasks.slice(0, 6);
     nrl.innerHTML = recent.length ? recent.map(t => `
       <div class="next-run-item">
-        <span>${t.id || t.name}</span>
+        <span>${taskLabel(t)}</span>
         <span class="next-run-time">${humanCron(t.schedule || t.cron)}</span>
       </div>
     `).join('') : '<div class="empty">Aucune tache</div>';
@@ -296,8 +317,20 @@ function renderRpiHistory() {
 // ---- PEOPLE ----
 function renderPeople() {
   const people = snapshot.nanoclaw?.people || [];
-  document.getElementById('people-grid').innerHTML = people.length ?
-    people.map(p => `
+  const groups = snapshot.nanoclaw?.groups || [];
+  // Add 1-on-1 conversations as people entries (deduplicate by jid)
+  const knownJids = new Set(people.map(p => p.jid));
+  const dmCards = groups
+    .filter(g => isPrivateChat(g) && !knownJids.has(g.jid))
+    .map(g => ({
+      name: g.name.replace(/ \(WhatsApp\)| \(Telegram\)/, ''),
+      jid: g.jid,
+      rights: g.isMain ? ['admin'] : [],
+      isDm: true,
+    }));
+  const all = [...people, ...dmCards];
+  document.getElementById('people-grid').innerHTML = all.length ?
+    all.map(p => `
       <div class="person-card">
         <div class="person-avatar">${(p.name || '?')[0].toUpperCase()}</div>
         <div class="person-name">${p.name || '--'}</div>
@@ -305,6 +338,7 @@ function renderPeople() {
         <div class="person-tags">
           ${channelBadge(p.jid)}
           ${(p.rights || []).map(r => `<span class="badge paused">${r}</span>`).join('')}
+          ${p.isDm ? '<span class="badge paused" style="font-size:9px">DM</span>' : ''}
         </div>
       </div>
     `).join('') :
@@ -313,7 +347,7 @@ function renderPeople() {
 
 // ---- GROUPS ----
 function renderGroups() {
-  const groups = snapshot.nanoclaw?.groups || [];
+  const groups = (snapshot.nanoclaw?.groups || []).filter(g => !isPrivateChat(g));
   document.getElementById('groups-tbody').innerHTML = groups.length ?
     groups.map(g => `
       <tr>
