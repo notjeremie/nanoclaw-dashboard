@@ -11,12 +11,8 @@ function showSection(name) {
   if (nav) nav.classList.add('active');
   renderSection(name);
 }
-
 document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', e => {
-    e.preventDefault();
-    showSection(item.dataset.section);
-  });
+  item.addEventListener('click', e => { e.preventDefault(); showSection(item.dataset.section); });
 });
 
 // ---- TABS ----
@@ -35,9 +31,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 async function fetchSnapshot() {
   try {
     const [snapRes, histRes, alertsRes] = await Promise.all([
-      fetch('/api/snapshot'),
-      fetch('/api/history'),
-      fetch('/api/alerts'),
+      fetch('/api/snapshot'), fetch('/api/history'), fetch('/api/alerts'),
     ]);
     snapshot = await snapRes.json();
     history = await histRes.json();
@@ -71,38 +65,37 @@ function renderAlertBadge(alerts) {
   if (!badge) return;
   const errors = alerts.filter(a => a.severity === 'error').length;
   const warns = alerts.filter(a => a.severity === 'warn').length;
-  if (errors > 0) {
-    badge.textContent = errors;
-    badge.className = 'sidebar-badge error';
-    badge.style.display = '';
-  } else if (warns > 0) {
-    badge.textContent = warns;
-    badge.className = 'sidebar-badge warn';
-    badge.style.display = '';
-  } else {
-    badge.style.display = 'none';
-  }
+  if (errors > 0) { badge.textContent = errors; badge.className = 'sidebar-badge error'; badge.style.display = ''; }
+  else if (warns > 0) { badge.textContent = warns; badge.className = 'sidebar-badge warn'; badge.style.display = ''; }
+  else { badge.style.display = 'none'; }
 }
 
 // ---- HELPERS ----
+function isPersonalChat(jid) {
+  if (!jid) return false;
+  if (jid.includes('@g.us')) return false;                   // WA group
+  if (jid.startsWith('tg:-')) return false;                  // TG group (negative ID)
+  if (jid.startsWith('wa:') && jid.includes('@s.whatsapp.net')) return true;
+  if (jid.startsWith('wa:') && jid.includes('@lid')) return true;
+  if (jid.startsWith('tg:') && !jid.startsWith('tg:-')) return true;
+  return false;
+}
+
 function badge(status) {
   const map = { active: 'active', paused: 'paused', error: 'error', online: 'active', offline: 'error', ok: 'active' };
-  const cls = map[status] || 'paused';
   const labels = { active: 'Actif', paused: 'Pause', error: 'Erreur', online: 'Online', offline: 'Offline', ok: 'OK' };
-  return `<span class="badge ${cls}">${labels[status] || status}</span>`;
+  return `<span class="badge ${map[status] || 'paused'}">${labels[status] || status}</span>`;
 }
 
 function statusDot(status) {
   if (!status) return '<span class="status-dot grey"></span>';
-  if (status === 'ok') return '<span class="status-dot green" title="OK"></span>';
-  if (status === 'error') return '<span class="status-dot red" title="Erreur"></span>';
-  return '<span class="status-dot grey"></span>';
+  return `<span class="status-dot ${status === 'ok' ? 'green' : 'red'}" title="${status}"></span>`;
 }
 
 function channelBadge(jid) {
   if (!jid) return '';
-  if (jid.startsWith('wa:') || jid.includes('whatsapp')) return '<span class="badge wa">WA</span>';
-  if (jid.startsWith('tg:') || jid.includes('telegram')) return '<span class="badge tg">TG</span>';
+  if (jid.startsWith('wa:')) return '<span class="badge wa">WA</span>';
+  if (jid.startsWith('tg:')) return '<span class="badge tg">TG</span>';
   return '';
 }
 
@@ -115,71 +108,91 @@ function fmtDate(iso) {
 
 function fmtDuration(ms) {
   if (!ms) return '';
-  if (ms < 1000) return ms + 'ms';
-  return (ms / 1000).toFixed(1) + 's';
+  return ms < 1000 ? ms + 'ms' : (ms / 1000).toFixed(1) + 's';
 }
 
 function humanCron(expr) {
   if (!expr) return '--';
   const map = {
-    '*/5 * * * *': 'Toutes les 5 min',
-    '7 * * * *': 'Toutes les heures (:07)',
-    '0 3 * * *': 'Chaque nuit a 3h',
-    '0 8,12,20 * * *': '8h, 12h, 20h',
-    '0 7 1 * *': '1er du mois 7h',
-    '15 18 * * *': 'Chaque jour 18h15',
-    '0 18 * * *': 'Chaque jour 18h',
-    '*/30 * * * *': 'Toutes les 30 min',
-    '0 8 * * *': 'Chaque jour 8h',
-    '0 12 * * *': 'Chaque jour 12h',
-    '0 20 * * *': 'Chaque jour 20h',
-    '0 9 * * 6': 'Samedi 9h',
-    '0 9 * * 4': 'Jeudi 9h',
-    '0 2 * * *': 'Chaque nuit 2h',
-    '0 7 * * 0': 'Dimanche 7h',
-    '15 9 * * *': 'Chaque jour 9h15',
-    '0 9 * * *': 'Chaque jour 9h',
-    '0 16 * * *': 'Chaque jour 16h',
-    '0 10 * * 4': 'Jeudi 10h',
-    '30 4 * * 0': 'Dimanche 4h30',
+    '*/5 * * * *': 'Toutes les 5 min', '7 * * * *': 'Toutes les heures',
+    '0 3 * * *': '3h (nuit)', '0 8,12,20 * * *': '8h / 12h / 20h',
+    '0 7 1 * *': '1er du mois 7h', '15 18 * * *': '18h15 quotidien',
+    '0 18 * * *': '18h quotidien', '*/30 * * * *': 'Toutes les 30 min',
+    '0 8 * * *': '8h quotidien', '0 9 * * *': '9h quotidien',
+    '0 9 * * 6': 'Samedi 9h', '0 9 * * 4': 'Jeudi 9h',
+    '0 2 * * *': '2h (nuit)', '0 7 * * 0': 'Dimanche 7h',
+    '15 9 * * *': '9h15 quotidien', '0 16 * * *': '16h quotidien',
+    '0 13 * * 4': 'Jeudi 13h', '30 4 * * 0': 'Dimanche 4h30',
     '45 4 * * 0': 'Dimanche 4h45',
   };
   return map[expr] || expr;
 }
 
-
-// ---- TASK LABEL ----
-function taskLabel(t) {
-  if (t.desc) return t.desc;   // RPi scripts
-  if (t.name) return t.name;   // RPi scripts fallback
-  // Extract script name from bash command in prompt
-  const m = (t.prompt || '').match(/node [^\s]*\/([a-z][a-z0-9-]*)(?:\.m?js)?/i);
-  if (m) return m[1];
-  // Fall back to group folder name
-  if (t.group) return t.group.replace(/^(telegram|whatsapp|discord)_/, '').replace(/-/g, ' ');
-  return t.id ? t.id.slice(0, 20) + '...' : '--';
+// ---- SMART NAME FROM PROMPT ----
+function smartName(task) {
+  if (task.name) return task.name;
+  const p = (task.prompt || '').trim();
+  const dash = p.match(/[—-]\s*([A-Za-zÀ-ÿ].{4,50}?)[\.\n]/);
+  if (dash) return dash[1].trim().slice(0, 45);
+  const h2 = p.match(/^##\s+(.+)/m);
+  if (h2) return h2[1].trim().slice(0, 45);
+  const eng = p.match(/^You are (monitoring|generating) (.{5,50}?)[\.\n]/m);
+  if (eng) return (eng[1][0].toUpperCase() + eng[1].slice(1) + ' ' + eng[2]).slice(0, 45);
+  const exec = p.match(/Exécut\w+ le script (?:de |d')(.{3,40}?)[\.\n`]/i);
+  if (exec) return exec[1].trim().slice(0, 45);
+  const node = p.match(/node\s+[\w./\-]+\/([\w\-]+)\.(?:mjs|js|cjs)/);
+  if (node) return node[1].replace(/-/g, ' ');
+  return p.replace(/^Tu es Antoine Sonof\.?\s*/i, '').split('\n')[0].trim().slice(0, 45) || task.id.slice(0, 20);
 }
 
-// ---- PRIVATE CHAT DETECTION ----
-function isPrivateChat(g) {
-  const jid = g.jid || '';
-  if (jid.includes('@s.whatsapp.net')) return true;
-  if (jid.startsWith('tg:') && !jid.startsWith('tg:-')) return true;
-  return false;
-}
-
-// ---- RUN NOW ----
+// ---- RUN NOW (RPi) ----
 async function runNow(scriptId) {
   const btn = document.querySelector(`[data-run="${scriptId}"]`);
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
   try {
-    const res = await fetch(`/action/run/${scriptId}`, { method: 'POST' });
-    const data = await res.json();
+    await fetch(`/action/run/${scriptId}`, { method: 'POST' });
     if (btn) { btn.textContent = 'Queued'; btn.style.background = '#3fb950'; }
     setTimeout(() => { if (btn) { btn.disabled = false; btn.textContent = 'Run'; btn.style.background = ''; } }, 3000);
-  } catch (e) {
-    if (btn) { btn.textContent = 'Err'; btn.disabled = false; }
+  } catch { if (btn) { btn.textContent = 'Err'; btn.disabled = false; } }
+}
+
+// ---- TASK NAME EDITING ----
+let editingTaskId = null;
+
+function startEdit(id, currentName) {
+  if (editingTaskId && editingTaskId !== id) cancelEdit();
+  editingTaskId = id;
+  const cell = document.getElementById('name-' + id);
+  if (!cell) return;
+  cell.innerHTML = `<input class="name-input" id="ni-${id}" value="${currentName.replace(/"/g, '&quot;')}" maxlength="50">
+    <button class="save-btn" onclick="saveEdit('${id}')">OK</button>
+    <button class="cancel-btn" onclick="cancelEdit()">x</button>`;
+  const inp = document.getElementById('ni-' + id);
+  if (inp) {
+    inp.focus(); inp.select();
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') saveEdit(id); if (e.key === 'Escape') cancelEdit(); });
   }
+}
+
+function cancelEdit() { editingTaskId = null; renderTasks(); }
+
+async function saveEdit(id) {
+  const inp = document.getElementById('ni-' + id);
+  if (!inp) return;
+  const name = inp.value.trim();
+  if (!name) { cancelEdit(); return; }
+  try {
+    await fetch('/api/task-name/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const tasks = snapshot.nanoclaw?.tasks || [];
+    const task = tasks.find(t => t.id === id);
+    if (task) task.name = name;
+  } catch (e) { console.error(e); }
+  editingTaskId = null;
+  renderTasks();
 }
 
 // ---- OVERVIEW ----
@@ -189,7 +202,8 @@ function renderOverview() {
   const paused = tasks.filter(t => t.status !== 'active').length;
   const scripts = snapshot.rpi?.scripts || [];
   const people = snapshot.nanoclaw?.people || [];
-  const groups = snapshot.nanoclaw?.groups || [];
+  const allGroups = snapshot.nanoclaw?.groups || [];
+  const realGroups = allGroups.filter(g => !isPersonalChat(g.jid));
   const disk = snapshot.rpi?.vps?.diskPct || 0;
 
   const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -197,34 +211,28 @@ function renderOverview() {
   setVal('stat-paused-tasks', paused || '--');
   setVal('stat-rpi-scripts', scripts.length || '--');
   setVal('stat-people', people.length || '--');
-  setVal('stat-groups', groups.length || '--');
+  setVal('stat-groups', realGroups.length || '--');
   setVal('stat-vps-disk', disk ? disk + '%' : '--');
-
   const icon = document.getElementById('stat-vps-icon');
   if (icon) icon.className = 'stat-icon ' + (disk > 85 ? 'red' : disk > 70 ? 'orange' : 'teal');
 
-  // Next runs
-  const allTasks = [...tasks, ...scripts.map(s => ({ ...s, id: s.name, schedule: s.cron, scheduleType: 'cron' }))];
+  // Prochaines executions — use smartName
   const nrl = document.getElementById('next-runs-list');
   if (nrl) {
-    const recent = allTasks.slice(0, 6);
-    nrl.innerHTML = recent.length ? recent.map(t => `
+    const activeTasks = tasks.filter(t => t.status === 'active').slice(0, 6);
+    nrl.innerHTML = activeTasks.length ? activeTasks.map(t => `
       <div class="next-run-item">
-        <span>${taskLabel(t)}</span>
-        <span class="next-run-time">${humanCron(t.schedule || t.cron)}</span>
+        <span>${smartName(t)}</span>
+        <span class="next-run-time">${humanCron(t.schedule)}</span>
       </div>
-    `).join('') : '<div class="empty">Aucune tache</div>';
+    `).join('') : '<div class="empty">Aucune tache active</div>';
   }
 
   // System status mini
   const ssm = document.getElementById('system-status-mini');
   if (ssm) {
-    const rpiAge = snapshot.rpi?.pushedAt
-      ? Math.round((Date.now() - new Date(snapshot.rpi.pushedAt).getTime()) / 60000)
-      : null;
-    const ncAge = snapshot.nanoclaw?.pushedAt
-      ? Math.round((Date.now() - new Date(snapshot.nanoclaw.pushedAt).getTime()) / 60000)
-      : null;
+    const rpiAge = snapshot.rpi?.pushedAt ? Math.round((Date.now() - new Date(snapshot.rpi.pushedAt).getTime()) / 60000) : null;
+    const ncAge = snapshot.nanoclaw?.pushedAt ? Math.round((Date.now() - new Date(snapshot.nanoclaw.pushedAt).getTime()) / 60000) : null;
     ssm.innerHTML = [
       `<div class="sys-row"><span class="sys-label">RPi</span><span>${rpiAge !== null ? badge(rpiAge < 15 ? 'active' : 'error') + ' ' + rpiAge + ' min' : badge('paused')}</span></div>`,
       `<div class="sys-row"><span class="sys-label">NanoClaw</span><span>${ncAge !== null ? badge('active') + ' ' + ncAge + ' min' : badge('paused')}</span></div>`,
@@ -238,24 +246,37 @@ function renderTasks() {
   const tasks = snapshot.nanoclaw?.tasks || [];
   const search = (document.getElementById('tasks-search')?.value || '').toLowerCase();
   const filter = document.getElementById('tasks-filter')?.value || '';
-
   const filtered = tasks.filter(t => {
     if (filter && t.status !== filter) return false;
-    if (search && !t.id?.toLowerCase().includes(search) && !t.group?.toLowerCase().includes(search)) return false;
+    if (search) {
+      const name = smartName(t).toLowerCase();
+      if (!name.includes(search) && !t.id.toLowerCase().includes(search) && !(t.group||'').toLowerCase().includes(search)) return false;
+    }
     return true;
   });
 
   document.getElementById('tasks-tbody').innerHTML = filtered.length ?
-    filtered.map(t => `
-      <tr>
-        <td><span class="mono">${t.group || '--'}</span></td>
+    filtered.map(t => {
+      const name = smartName(t);
+      const isEditing = editingTaskId === t.id;
+      return `<tr>
+        <td id="name-${t.id}" class="task-name-cell">
+          ${isEditing ? '' : `<span class="task-name-display" title="Cliquer pour renommer">${name}</span>
+          <button class="edit-name-btn" onclick="startEdit('${t.id}', '${name.replace(/'/g, "\\'")}')" title="Renommer">✎</button>`}
+        </td>
+        <td><span class="mono" style="font-size:11px;color:var(--muted)">${t.group || '--'}</span></td>
         <td title="${t.schedule || ''}">${humanCron(t.schedule)}</td>
         <td>${badge(t.status || 'active')}</td>
-        <td class="mono" style="font-size:11px">${t.nextRun ? fmtDate(t.nextRun) : '--'}</td>
-        <td><span class="mono" style="font-size:10px;color:var(--muted)">${(t.id || '').slice(0, 28)}</span></td>
-      </tr>
-    `).join('') :
+        <td><span class="mono" style="font-size:10px;color:var(--muted)">${(t.id || '').slice(0, 24)}</span></td>
+      </tr>`;
+    }).join('') :
     '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucune tache</td></tr>';
+
+  // Re-trigger editing state if needed
+  if (editingTaskId) {
+    const task = filtered.find(t => t.id === editingTaskId);
+    if (task) startEdit(editingTaskId, smartName(task));
+  }
 }
 
 document.getElementById('tasks-search')?.addEventListener('input', renderTasks);
@@ -267,26 +288,18 @@ function renderRpi() {
   document.getElementById('rpi-tbody').innerHTML = scripts.length ?
     scripts.map(s => {
       const h = history[s.name] || [];
-      const lastRun = s.lastRun || (h[0]?.lastRun) || null;
-      const lastStatus = s.lastStatus || (h[0]?.lastStatus) || null;
-      const lastDur = s.lastDuration || (h[0]?.lastDuration) || null;
+      const lastRun = s.lastRun || h[0]?.lastRun || null;
+      const lastStatus = s.lastStatus || h[0]?.lastStatus || null;
+      const lastDur = s.lastDuration || h[0]?.lastDuration || null;
       return `<tr>
         <td><strong>${s.name}</strong></td>
         <td><span class="mono" style="font-size:11px">${humanCron(s.cron)}</span></td>
         <td style="color:var(--muted);font-size:12px">${s.desc || '--'}</td>
-        <td>
-          ${statusDot(lastStatus)}
-          <span class="mono" style="font-size:11px">${lastRun ? fmtDate(lastRun) : '--'}</span>
-          ${lastDur ? '<span style="color:var(--muted);font-size:10px"> ' + fmtDuration(lastDur) + '</span>' : ''}
-        </td>
-        <td>
-          <button class="run-btn" data-run="${s.name}" onclick="runNow('${s.name}')">Run</button>
-        </td>
+        <td>${statusDot(lastStatus)}<span class="mono" style="font-size:11px">${lastRun ? fmtDate(lastRun) : '--'}</span>${lastDur ? ' <span style="color:var(--muted);font-size:10px">' + fmtDuration(lastDur) + '</span>' : ''}</td>
+        <td><button class="run-btn" data-run="${s.name}" onclick="runNow('${s.name}')">Run</button></td>
       </tr>`;
     }).join('') :
     '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucun script RPi</td></tr>';
-
-  // History panel
   renderRpiHistory();
 }
 
@@ -294,22 +307,12 @@ function renderRpiHistory() {
   const panel = document.getElementById('rpi-history');
   if (!panel) return;
   const keys = Object.keys(history);
-  if (!keys.length) {
-    panel.innerHTML = '<div class="empty">Aucun historique disponible</div>';
-    return;
-  }
+  if (!keys.length) { panel.innerHTML = '<div class="empty">Aucun historique disponible</div>'; return; }
   panel.innerHTML = keys.map(name => {
     const runs = history[name] || [];
     return `<div style="margin-bottom:16px">
       <div style="font-weight:600;font-size:13px;margin-bottom:6px">${name}</div>
-      ${runs.slice(0, 5).map(r => `
-        <div class="history-row">
-          ${statusDot(r.lastStatus)}
-          <span class="mono" style="font-size:11px">${fmtDate(r.lastRun)}</span>
-          ${r.lastDuration ? '<span style="color:var(--muted);font-size:10px"> ' + fmtDuration(r.lastDuration) + '</span>' : ''}
-          ${r.lastError ? '<span style="color:var(--red);font-size:10px"> ' + r.lastError.slice(0, 40) + '</span>' : ''}
-        </div>
-      `).join('')}
+      ${runs.slice(0, 5).map(r => `<div class="history-row">${statusDot(r.lastStatus)}<span class="mono" style="font-size:11px">${fmtDate(r.lastRun)}</span>${r.lastDuration ? ' <span style="color:var(--muted);font-size:10px">' + fmtDuration(r.lastDuration) + '</span>' : ''}${r.lastError ? ' <span style="color:var(--red);font-size:10px">' + r.lastError.slice(0, 40) + '</span>' : ''}</div>`).join('')}
     </div>`;
   }).join('');
 }
@@ -317,28 +320,26 @@ function renderRpiHistory() {
 // ---- PEOPLE ----
 function renderPeople() {
   const people = snapshot.nanoclaw?.people || [];
-  const groups = snapshot.nanoclaw?.groups || [];
-  // Add 1-on-1 conversations as people entries (deduplicate by jid)
-  const knownJids = new Set(people.map(p => p.jid));
-  const dmCards = groups
-    .filter(g => isPrivateChat(g) && !knownJids.has(g.jid))
-    .map(g => ({
-      name: g.name.replace(/ \(WhatsApp\)| \(Telegram\)/, ''),
-      jid: g.jid,
-      rights: g.isMain ? ['admin'] : [],
-      isDm: true,
-    }));
-  const all = [...people, ...dmCards];
-  document.getElementById('people-grid').innerHTML = all.length ?
-    all.map(p => `
+  const allGroups = snapshot.nanoclaw?.groups || [];
+  // Add personal chats from groups that aren't already in people
+  const personalChats = allGroups.filter(g => isPersonalChat(g.jid));
+  const existingJids = new Set(people.map(p => p.jid));
+  const extra = personalChats.filter(g => !existingJids.has(g.jid)).map(g => ({
+    name: g.name, jid: g.jid, rights: [], email: '',
+  }));
+  const allPeople = [...people, ...extra];
+
+  document.getElementById('people-grid').innerHTML = allPeople.length ?
+    allPeople.map(p => `
       <div class="person-card">
         <div class="person-avatar">${(p.name || '?')[0].toUpperCase()}</div>
         <div class="person-name">${p.name || '--'}</div>
         <div class="person-jid">${p.jid || '--'}</div>
         <div class="person-tags">
           ${channelBadge(p.jid)}
+          ${isPersonalChat(p.jid) ? '<span class="badge paused">DM</span>' : ''}
           ${(p.rights || []).map(r => `<span class="badge paused">${r}</span>`).join('')}
-          ${p.isDm ? '<span class="badge paused" style="font-size:9px">DM</span>' : ''}
+          ${p.email ? '<span class="badge paused" style="font-size:9px">' + p.email + '</span>' : ''}
         </div>
       </div>
     `).join('') :
@@ -347,67 +348,53 @@ function renderPeople() {
 
 // ---- GROUPS ----
 function renderGroups() {
-  const groups = (snapshot.nanoclaw?.groups || []).filter(g => !isPrivateChat(g));
+  const allGroups = snapshot.nanoclaw?.groups || [];
+  const groups = allGroups.filter(g => !isPersonalChat(g.jid));
   document.getElementById('groups-tbody').innerHTML = groups.length ?
-    groups.map(g => `
-      <tr>
-        <td><strong>${g.name || '--'}</strong>${g.isMain ? ' <span class="badge active" style="font-size:9px">MAIN</span>' : ''}</td>
-        <td>${channelBadge(g.jid)}</td>
-        <td><span class="mono">${g.trigger || '--'}</span></td>
-        <td><span class="mono" style="font-size:11px">${g.lastActivity ? fmtDate(g.lastActivity) : '--'}</span></td>
-        <td>${badge(g.active ? 'active' : 'paused')}</td>
-      </tr>
-    `).join('') :
+    groups.map(g => `<tr>
+      <td><strong>${g.name || '--'}</strong>${g.isMain ? ' <span class="badge active" style="font-size:9px">MAIN</span>' : ''}</td>
+      <td>${channelBadge(g.jid)}</td>
+      <td><span class="mono">${g.trigger || '--'}</span></td>
+      <td><span class="mono" style="font-size:11px">${g.lastActivity ? fmtDate(g.lastActivity) : '--'}</span></td>
+      <td>${badge(g.active ? 'active' : 'paused')}</td>
+    </tr>`).join('') :
     '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucune donnee</td></tr>';
 }
 
 // ---- SYSTEM ----
 function renderSystem() {
   const rpi = snapshot.rpi || {};
-  const pm2 = rpi.pm2 || [];
   const vps = rpi.vps || {};
-  const rpiPushedAt = rpi.pushedAt;
-  const ncPushedAt = snapshot.nanoclaw?.pushedAt;
-  const rpiAge = rpiPushedAt ? Math.round((Date.now() - new Date(rpiPushedAt).getTime()) / 60000) : null;
+  const pm2 = rpi.pm2 || [];
+  const rpiAt = rpi.pushedAt;
+  const ncAt = snapshot.nanoclaw?.pushedAt;
+  const rpiAge = rpiAt ? Math.round((Date.now() - new Date(rpiAt).getTime()) / 60000) : null;
   const isStale = rpiAge !== null && rpiAge > 15;
 
   document.getElementById('vps-detail').innerHTML = [
-    ...pm2.map(app => `
-      <div class="sys-row">
-        <span class="sys-label">${app.name}</span>
-        <span style="display:flex;align-items:center;gap:8px">
-          ${badge(app.status === 'online' ? 'active' : 'error')}
-          <span class="mono" style="font-size:11px">${app.uptime || ''}</span>
-          <span style="color:var(--muted);font-size:11px">${app.cpu}% CPU</span>
-          <span style="color:var(--muted);font-size:11px">${app.mem}</span>
-        </span>
-      </div>
-    `),
-    `<div class="sys-row"><span class="sys-label">Disk</span>
-      <span style="display:flex;align-items:center;gap:8px">
-        <div class="progress-bar"><div class="progress-fill ${vps.diskPct>85?'danger':vps.diskPct>70?'warn':''}" style="width:${vps.diskPct||0}%"></div></div>
-        <span>${vps.diskPct || 0}%</span>
-      </span>
-    </div>`,
-    `<div class="sys-row"><span class="sys-label">Memoire</span><span>${vps.memUsed || '--'} / ${vps.memTotal || '--'}</span></div>`,
+    ...pm2.map(app => `<div class="sys-row"><span class="sys-label">${app.name}</span>
+      <span style="display:flex;align-items:center;gap:8px">${badge(app.status==='online'?'active':'error')}
+      <span class="mono" style="font-size:11px">${app.uptime||''}</span>
+      <span style="color:var(--muted);font-size:11px">${app.cpu}% CPU ${app.mem}</span></span></div>`),
+    `<div class="sys-row"><span class="sys-label">Disk</span><span style="display:flex;align-items:center;gap:8px"><div class="progress-bar"><div class="progress-fill ${vps.diskPct>85?'danger':vps.diskPct>70?'warn':''}" style="width:${vps.diskPct||0}%"></div></div>${vps.diskPct||0}%</span></div>`,
+    `<div class="sys-row"><span class="sys-label">Memoire</span><span>${vps.memUsed||'--'} / ${vps.memTotal||'--'}</span></div>`,
   ].join('') || '<div class="empty">VPS en attente</div>';
 
   document.getElementById('rpi-detail').innerHTML = [
-    `<div class="sys-row"><span class="sys-label">Connexion</span>${isStale ? badge('error') + ' <span style="font-size:11px;color:var(--red)">' + rpiAge + ' min</span>' : badge(rpiPushedAt ? 'active' : 'paused')}</div>`,
-    `<div class="sys-row"><span class="sys-label">Scripts</span><span>${(rpi.scripts || []).length}</span></div>`,
-    `<div class="sys-row"><span class="sys-label">Node.js</span><span class="mono">${rpi.nodeVersion || '--'}</span></div>`,
-    `<div class="sys-row"><span class="sys-label">Derniere maj</span><span class="mono" style="font-size:11px">${rpiPushedAt ? fmtDate(rpiPushedAt) : '--'}</span></div>`,
+    `<div class="sys-row"><span class="sys-label">Connexion</span>${isStale?badge('error')+' <span style="color:var(--red);font-size:11px">'+rpiAge+' min</span>':badge(rpiAt?'active':'paused')}</div>`,
+    `<div class="sys-row"><span class="sys-label">Scripts</span><span>${(rpi.scripts||[]).length}</span></div>`,
+    `<div class="sys-row"><span class="sys-label">Node.js</span><span class="mono">${rpi.nodeVersion||'--'}</span></div>`,
+    `<div class="sys-row"><span class="sys-label">Derniere maj</span><span class="mono" style="font-size:11px">${rpiAt?fmtDate(rpiAt):'--'}</span></div>`,
   ].join('');
 
   document.getElementById('nanoclaw-detail').innerHTML = [
-    `<div class="sys-row"><span class="sys-label">Statut</span>${badge(ncPushedAt ? 'active' : 'paused')}</div>`,
-    `<div class="sys-row"><span class="sys-label">Taches actives</span><span>${(snapshot.nanoclaw?.tasks || []).filter(t => t.status === 'active').length}</span></div>`,
-    `<div class="sys-row"><span class="sys-label">Groupes</span><span>${(snapshot.nanoclaw?.groups || []).length}</span></div>`,
-    `<div class="sys-row"><span class="sys-label">Personnes</span><span>${(snapshot.nanoclaw?.people || []).length}</span></div>`,
-    `<div class="sys-row"><span class="sys-label">Derniere maj</span><span class="mono" style="font-size:11px">${ncPushedAt ? fmtDate(ncPushedAt) : '--'}</span></div>`,
+    `<div class="sys-row"><span class="sys-label">Statut</span>${badge(ncAt?'active':'paused')}</div>`,
+    `<div class="sys-row"><span class="sys-label">Taches actives</span><span>${(snapshot.nanoclaw?.tasks||[]).filter(t=>t.status==='active').length}</span></div>`,
+    `<div class="sys-row"><span class="sys-label">Groupes</span><span>${(snapshot.nanoclaw?.groups||[]).filter(g=>!isPersonalChat(g.jid)).length}</span></div>`,
+    `<div class="sys-row"><span class="sys-label">Personnes</span><span>${(snapshot.nanoclaw?.people||[]).length}</span></div>`,
+    `<div class="sys-row"><span class="sys-label">Derniere maj</span><span class="mono" style="font-size:11px">${ncAt?fmtDate(ncAt):'--'}</span></div>`,
   ].join('');
 
-  // Logs viewer
   const logsEl = document.getElementById('logs-content');
   if (logsEl) {
     const logs = (rpi.recentLogs || []).slice().reverse();

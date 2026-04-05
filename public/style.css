@@ -137,3 +137,17 @@ a{color:inherit;text-decoration:none}
 /* ---- RPi TABLE COLUMNS ---- */
 #rpi-table th:nth-child(4){width:180px}
 #rpi-table th:nth-child(5){width:70px}
+
+/* ---- TASK NAME EDITING ---- */
+.task-name-cell { white-space: nowrap; }
+.task-name-display { cursor: default; }
+.edit-name-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 0 4px; opacity: 0; transition: .15s; vertical-align: middle; }
+.data-table tr:hover .edit-name-btn { opacity: 1; }
+.edit-name-btn:hover { color: var(--blue); }
+.name-input { background: var(--card); border: 1px solid var(--blue); border-radius: 6px; color: var(--text); font-size: 13px; padding: 4px 8px; outline: none; width: 180px; }
+.save-btn { background: var(--green); border: none; border-radius: 5px; color: #fff; cursor: pointer; font-size: 11px; font-weight: 600; margin-left: 4px; padding: 4px 8px; }
+.cancel-btn { background: transparent; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); cursor: pointer; font-size: 11px; margin-left: 2px; padding: 4px 7px; }
+
+/* ---- TASKS TABLE - name col wider ---- */
+#tasks-table th:nth-child(1) { width: 220px; }
+#tasks-table th:nth-child(2) { width: 120px; }
