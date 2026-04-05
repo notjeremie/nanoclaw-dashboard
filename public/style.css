@@ -106,3 +106,34 @@ a{color:inherit;text-decoration:none}
 .next-run-item:last-child{border-bottom:none}
 .next-run-time{color:var(--blue);font-family:monospace;font-size:12px}
 .mono{font-family:monospace;font-size:11px;color:var(--muted)}
+
+/* ---- RUN BUTTON ---- */
+.run-btn{background:#21262d;border:1px solid #30363d;border-radius:6px;color:#58a6ff;font-size:11px;font-weight:600;padding:4px 10px;cursor:pointer;transition:.15s}
+.run-btn:hover{background:#238636;border-color:#238636;color:#fff}
+.run-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---- STATUS DOTS ---- */
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.status-dot.green{background:var(--green)}
+.status-dot.red{background:var(--red)}
+.status-dot.grey{background:var(--muted)}
+
+/* ---- HISTORY ROWS ---- */
+.history-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;border-bottom:1px solid #21262d}
+.history-row:last-child{border-bottom:none}
+
+/* ---- SIDEBAR BADGE ---- */
+.sidebar-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;margin-left:auto}
+.sidebar-badge.error{background:var(--red);color:#fff}
+.sidebar-badge.warn{background:var(--orange);color:#fff}
+
+/* ---- LOGS VIEWER ---- */
+.log-viewer{background:#010409;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:monospace;font-size:11px;color:#7d8590;overflow-y:auto;max-height:300px;white-space:pre-wrap;word-break:break-all;line-height:1.6}
+
+/* ---- TABS CONTAINER (fix nested tabs) ---- */
+.tabs-container{margin-bottom:20px}
+.tabs-container .tabs{margin-bottom:0}
+
+/* ---- RPi TABLE COLUMNS ---- */
+#rpi-table th:nth-child(4){width:180px}
+#rpi-table th:nth-child(5){width:70px}

@@ -28,7 +28,7 @@
         <i data-lucide="users"></i><span>Contacts</span>
       </a>
       <a href="#" class="nav-item" data-section="system">
-        <i data-lucide="server"></i><span>Systeme</span>
+        <i data-lucide="server"></i><span>Systeme</span><span class="sidebar-badge" id="alert-badge" style="display:none">0</span>
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -110,9 +110,13 @@
       <div id="rpi-tab" class="tab-content">
         <div class="table-wrap">
           <table class="data-table" id="rpi-table">
-            <thead><tr><th>Script</th><th>Cron</th><th>Description</th><th>Statut</th></tr></thead>
+            <thead><tr><th>Script</th><th>Cron</th><th>Description</th><th>Dernier run</th><th></th></tr></thead>
             <tbody id="rpi-tbody"></tbody>
           </table>
+        </div>
+        <div class="card mt16">
+          <div class="card-header"><i data-lucide="clock"></i> Historique des runs</div>
+          <div class="card-body" id="rpi-history"><div class="empty">Chargement...</div></div>
         </div>
       </div>
     </section>
@@ -155,6 +159,10 @@
       <div class="card mt16">
         <div class="card-header"><i data-lucide="activity"></i> NanoClaw</div>
         <div class="card-body" id="nanoclaw-detail"></div>
+      </div>
+      <div class="card mt16">
+        <div class="card-header"><i data-lucide="terminal"></i> Logs RPi</div>
+        <div class="card-body"><pre class="log-viewer" id="logs-content">En attente...</pre></div>
       </div>
     </section>
 
